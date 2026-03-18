@@ -53,6 +53,12 @@ export class AuthService {
     );
   }
 
+  uploadAvatar(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>('http://localhost:8080/api/upload/avatar', formData);
+  }
+
   logout(): void {
     localStorage.removeItem('user');
     this.currentUserSubject.next(null);

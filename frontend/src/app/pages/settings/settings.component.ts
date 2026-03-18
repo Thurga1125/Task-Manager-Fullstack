@@ -32,7 +32,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
                 </div>
               </div>
               <div class="flex-1">
-                <p class="text-sm text-slate-500 mb-3">Upload a photo (JPG, PNG). Max 2MB. Stored as base64.</p>
+                <p class="text-sm text-slate-500 mb-3">Upload a photo (JPG, PNG, GIF). Max 5MB.</p>
                 <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors text-sm font-medium">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
@@ -144,11 +144,14 @@ export class SettingsComponent implements OnInit {
   }
 
   constructor(private fb: FormBuilder, private authService: AuthService) {
-    this.passwordForm = this.fb.group({
-      currentPassword: ['', Validators.required],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required]
-    }, { validators: this.passwordMatchValidator });
+    this.passwordForm = this.fb.group(
+      {
+        currentPassword: ['', Validators.required],
+        newPassword: ['', [Validators.required, Validators.minLength(6)]],
+        confirmPassword: ['', Validators.required]
+      },
+      { validators: [this.passwordMatchValidator] }
+    );
   }
 
   ngOnInit(): void {
@@ -168,24 +171,26 @@ export class SettingsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
-    if (file.size > 2 * 1024 * 1024) {
-      this.profileError = 'File must be under 2MB';
+    if (file.size > 5 * 1024 * 1024) {
+      this.profileError = 'File must be under 5MB';
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      this.profileError = '';
-      this.authService.updateProfile(base64).subscribe({
-        next: () => {
-          this.profilePicture = base64;
-          this.profileSuccess = true;
-          setTimeout(() => this.profileSuccess = false, 3000);
-        },
-        error: () => { this.profileError = 'Failed to update profile picture'; }
-      });
-    };
-    reader.readAsDataURL(file);
+    this.profileError = '';
+    this.authService.uploadAvatar(file).subscribe({
+      next: ({ url }) => {
+        this.authService.updateProfile(url).subscribe({
+          next: () => {
+            this.profilePicture = url;
+            this.profileSuccess = true;
+            setTimeout(() => this.profileSuccess = false, 3000);
+          },
+          error: () => { this.profileError = 'Failed to update profile picture'; }
+        });
+      },
+      error: err => {
+        this.profileError = err.error?.error || 'Failed to upload image';
+      }
+    });
   }
 
   removeProfilePicture(): void {

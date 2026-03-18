@@ -1,13 +1,18 @@
 package com.taskmanager.service;
 
+import com.taskmanager.dto.PageResponse;
 import com.taskmanager.dto.ProjectDTO;
+import com.taskmanager.exception.ForbiddenException;
+import com.taskmanager.exception.ResourceNotFoundException;
 import com.taskmanager.model.Project;
 import com.taskmanager.repository.ProjectRepository;
 import com.taskmanager.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -16,8 +21,14 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
 
-    public List<Project> getUserProjects(String userId) {
-        return projectRepository.findByUserId(userId);
+    public PageResponse<Project> getUserProjects(String userId, int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Project> projectsPage = (search == null || search.isBlank())
+                ? projectRepository.findByUserId(userId, pageable)
+                : projectRepository.findByUserIdAndNameContainingIgnoreCase(userId, search.trim(), pageable);
+
+        return new PageResponse<>(projectsPage.getContent(), page, size,
+                projectsPage.getTotalElements(), projectsPage.getTotalPages(), projectsPage.isLast());
     }
 
     public Project createProject(ProjectDTO dto, String userId) {
@@ -30,9 +41,9 @@ public class ProjectService {
 
     public Project getProject(String id, String userId) {
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
         if (!project.getUserId().equals(userId)) {
-            throw new RuntimeException("Access denied");
+            throw new ForbiddenException("You do not have permission to access this project");
         }
         return project;
     }

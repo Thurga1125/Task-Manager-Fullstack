@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Project, ProjectDTO } from '../models/project.model';
+import { PageResponse } from '../models/task.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
@@ -9,8 +10,12 @@ export class ProjectService {
 
   constructor(private http: HttpClient) {}
 
-  getProjects(): Observable<Project[]> {
-    return this.http.get<Project[]>(this.apiUrl);
+  getProjects(page = 0, size = 9, search = ''): Observable<PageResponse<Project>> {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size)
+      .set('search', search);
+    return this.http.get<PageResponse<Project>>(this.apiUrl, { params });
   }
 
   getProject(id: string): Observable<Project> {

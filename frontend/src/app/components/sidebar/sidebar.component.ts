@@ -21,8 +21,8 @@ import { CommonModule } from '@angular/common';
       <!-- Logo -->
       <div class="p-6 border-b border-slate-100">
         <div class="flex items-center gap-3">
-          <img src="logo.jpg" alt="TaskHub Logo" class="w-10 h-10">
-          <span class="text-xl font-bold text-slate-800 tracking-wide"></span>
+          <img src="logo.jpg" alt="TaskHub Logo" class="w-10 h-10 object-contain">
+          <span class="text-xl font-bold text-slate-800 tracking-wide">TaskHub</span>
         </div>
       </div>
 
@@ -31,7 +31,7 @@ import { CommonModule } from '@angular/common';
         <a routerLink="/dashboard" routerLinkActive="bg-teal-100 text-teal-700 font-semibold"
            class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-teal-50 hover:text-teal-700 transition-all font-medium">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
           </svg>
           Dashboard
         </a>
@@ -90,6 +90,6 @@ export class SidebarComponent {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 }

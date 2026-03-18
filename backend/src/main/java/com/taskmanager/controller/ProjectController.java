@@ -1,5 +1,6 @@
 package com.taskmanager.controller;
 
+import com.taskmanager.dto.PageResponse;
 import com.taskmanager.dto.ProjectDTO;
 import com.taskmanager.model.Project;
 import com.taskmanager.repository.UserRepository;
@@ -10,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -27,32 +26,40 @@ public class ProjectController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Project>> getProjects(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(projectService.getUserProjects(getUserId(userDetails)));
+    public ResponseEntity<PageResponse<Project>> getProjects(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(defaultValue = "") String search,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(projectService.getUserProjects(getUserId(userDetails), page, size, search));
     }
 
     @PostMapping
-    public ResponseEntity<Project> createProject(@Valid @RequestBody ProjectDTO dto,
-                                                  @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Project> createProject(
+            @Valid @RequestBody ProjectDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(projectService.createProject(dto, getUserId(userDetails)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Project> getProject(@PathVariable String id,
-                                               @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Project> getProject(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(projectService.getProject(id, getUserId(userDetails)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Project> updateProject(@PathVariable String id,
-                                                  @Valid @RequestBody ProjectDTO dto,
-                                                  @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Project> updateProject(
+            @PathVariable String id,
+            @Valid @RequestBody ProjectDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(projectService.updateProject(id, dto, getUserId(userDetails)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable String id,
-                                               @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Void> deleteProject(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
         projectService.deleteProject(id, getUserId(userDetails));
         return ResponseEntity.noContent().build();
     }
