@@ -39,6 +39,15 @@ public class TaskService {
                 tasksPage.getTotalElements(), tasksPage.getTotalPages(), tasksPage.isLast());
     }
 
+    public Task getTask(String taskId, String userId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        if (!task.getUserId().equals(userId)) {
+            throw new ForbiddenException("You do not have permission to view this task");
+        }
+        return task;
+    }
+
     public Task createTask(String projectId, TaskDTO dto, String userId) {
         projectRepository.findById(projectId)
                 .filter(p -> p.getUserId().equals(userId))

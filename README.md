@@ -6,9 +6,9 @@ A full-stack Task Manager application built with **Angular 17+** (frontend) and 
 
 ```
 Task-Manager-Fullstack/
-├── frontend/          # Angular 17+ app
-├── backend/           # Spring Boot 3 app
-├── docker-compose.yml # (coming soon)
+├── frontend/          # Angular 17+ app (with Dockerfile)
+├── backend/           # Spring Boot 3 app (with Dockerfile)
+├── docker-compose.yml # Runs full stack with Docker
 └── README.md
 ```
 
@@ -37,6 +37,7 @@ Task-Manager-Fullstack/
 ### Tasks (JWT required)
 - `GET /api/projects/:projectId/tasks` — list tasks
 - `POST /api/projects/:projectId/tasks` — create task
+- `GET /api/tasks/:taskId` — get task by ID
 - `PUT /api/tasks/:taskId` — update task
 - `DELETE /api/tasks/:taskId` — delete task
 
@@ -70,6 +71,28 @@ npm install
 ng serve
 # Runs on http://localhost:4200
 ```
+
+## Running with Docker
+
+### Prerequisites
+- Docker and Docker Compose installed
+
+### Start all services
+```bash
+docker-compose up --build
+```
+
+This starts:
+- **MongoDB** on port 27017
+- **Spring Boot backend** on port 8080
+- **Angular frontend** on port 4200 (served via Nginx)
+
+### Stop all services
+```bash
+docker-compose down
+```
+
+---
 
 ## JWT Auth Flow
 1. Register at `/register` with username, email, password

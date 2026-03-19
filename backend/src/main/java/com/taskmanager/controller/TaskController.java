@@ -5,6 +5,8 @@ import com.taskmanager.dto.TaskDTO;
 import com.taskmanager.model.Task;
 import com.taskmanager.repository.UserRepository;
 import com.taskmanager.service.TaskService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Tag(name = "Tasks", description = "Manage tasks within projects")
 public class TaskController {
 
     private final TaskService taskService;
@@ -26,6 +29,7 @@ public class TaskController {
     }
 
     @GetMapping("/projects/{projectId}/tasks")
+    @Operation(summary = "Get paginated tasks for a project")
     public ResponseEntity<PageResponse<Task>> getProjectTasks(
             @PathVariable String projectId,
             @RequestParam(defaultValue = "0") int page,
@@ -36,6 +40,7 @@ public class TaskController {
     }
 
     @PostMapping("/projects/{projectId}/tasks")
+    @Operation(summary = "Create a new task in a project")
     public ResponseEntity<Task> createTask(
             @PathVariable String projectId,
             @Valid @RequestBody TaskDTO dto,
@@ -43,7 +48,16 @@ public class TaskController {
         return ResponseEntity.ok(taskService.createTask(projectId, dto, getUserId(userDetails)));
     }
 
+    @GetMapping("/tasks/{taskId}")
+    @Operation(summary = "Get a task by ID")
+    public ResponseEntity<Task> getTask(
+            @PathVariable String taskId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(taskService.getTask(taskId, getUserId(userDetails)));
+    }
+
     @PutMapping("/tasks/{taskId}")
+    @Operation(summary = "Update a task")
     public ResponseEntity<Task> updateTask(
             @PathVariable String taskId,
             @RequestBody TaskDTO dto,
@@ -52,6 +66,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/tasks/{taskId}")
+    @Operation(summary = "Delete a task")
     public ResponseEntity<Void> deleteTask(
             @PathVariable String taskId,
             @AuthenticationPrincipal UserDetails userDetails) {
