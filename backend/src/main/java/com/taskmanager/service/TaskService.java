@@ -7,6 +7,7 @@ import com.taskmanager.exception.ResourceNotFoundException;
 import com.taskmanager.model.Task;
 import com.taskmanager.repository.ProjectRepository;
 import com.taskmanager.repository.TaskRepository;
+import com.taskmanager.util.SanitizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
+    private final ActivityLogService activityLogService;
 
     public PageResponse<Task> getProjectTasks(String projectId, String userId, int page, int size, String search) {
         projectRepository.findById(projectId)
@@ -43,17 +45,20 @@ public class TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         Task task = new Task();
-        task.setTitle(dto.getTitle());
-        task.setDescription(dto.getDescription());
+        task.setTitle(SanitizationUtil.sanitize(dto.getTitle()));
+        task.setDescription(SanitizationUtil.sanitize(dto.getDescription()));
         task.setStatus(dto.getStatus() != null ? dto.getStatus() : "TO_DO");
         task.setPriority(dto.getPriority() != null ? dto.getPriority() : "MEDIUM");
         task.setDueDate(dto.getDueDate());
-        task.setAssignee(dto.getAssignee());
+        task.setAssignee(SanitizationUtil.sanitize(dto.getAssignee()));
         task.setProjectId(projectId);
         task.setUserId(userId);
         task.setCreatedAt(LocalDateTime.now());
         task.setUpdatedAt(LocalDateTime.now());
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        activityLogService.log(userId, "TASK", saved.getId(), "CREATED",
+                "Created task '" + saved.getTitle() + "'", projectId);
+        return saved;
     }
 
     public Task updateTask(String taskId, TaskDTO dto, String userId) {
@@ -62,14 +67,17 @@ public class TaskService {
         if (!task.getUserId().equals(userId)) {
             throw new ForbiddenException("You do not have permission to update this task");
         }
-        if (dto.getTitle() != null) task.setTitle(dto.getTitle());
-        if (dto.getDescription() != null) task.setDescription(dto.getDescription());
+        if (dto.getTitle() != null) task.setTitle(SanitizationUtil.sanitize(dto.getTitle()));
+        if (dto.getDescription() != null) task.setDescription(SanitizationUtil.sanitize(dto.getDescription()));
         if (dto.getStatus() != null) task.setStatus(dto.getStatus());
         if (dto.getPriority() != null) task.setPriority(dto.getPriority());
-        if (dto.getAssignee() != null) task.setAssignee(dto.getAssignee());
+        if (dto.getAssignee() != null) task.setAssignee(SanitizationUtil.sanitize(dto.getAssignee()));
         if (dto.getDueDate() != null) task.setDueDate(dto.getDueDate());
         task.setUpdatedAt(LocalDateTime.now());
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        activityLogService.log(userId, "TASK", saved.getId(), "UPDATED",
+                "Updated task '" + saved.getTitle() + "'", saved.getProjectId());
+        return saved;
     }
 
     public void deleteTask(String taskId, String userId) {
@@ -78,6 +86,8 @@ public class TaskService {
         if (!task.getUserId().equals(userId)) {
             throw new ForbiddenException("You do not have permission to delete this task");
         }
+        activityLogService.log(userId, "TASK", taskId, "DELETED",
+                "Deleted task '" + task.getTitle() + "'", task.getProjectId());
         taskRepository.delete(task);
     }
 }
