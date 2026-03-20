@@ -99,6 +99,16 @@ docker-compose down
 2. Login at `/login` — JWT token stored in `localStorage`
 3. All API requests include `Authorization: Bearer <token>` header automatically
 
+## Credentials
+
+There is no pre-seeded account. Register a new account at `/register` to get started.
+
+**Example test credentials** (register these yourself on first run):
+- Email: `test@example.com`
+- Password: `password123`
+
+JWT tokens expire after **24 hours**. All protected routes (`/dashboard`, `/projects/:id`, `/settings`) require a valid token and will redirect to `/login` if unauthenticated.
+
 ## UI Pages
 | Route | Description |
 |-------|-------------|

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -110,8 +110,9 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
         <!-- Projects Grid -->
         <div *ngIf="!loading && displayedProjects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div *ngFor="let project of displayedProjects"
-            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-teal-200 transition-all group">
+          <a *ngFor="let project of displayedProjects"
+            [routerLink]="['/projects', project.id]"
+            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-teal-200 transition-all group cursor-pointer block">
             <div class="flex items-start justify-between mb-4">
               <div class="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center">
                 <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,15 +137,13 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
                 </button>
               </div>
             </div>
-            <a [routerLink]="['/projects', project.id]" class="block">
-              <h3 class="text-lg font-semibold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">{{ project.name }}</h3>
-              <p class="text-slate-500 text-sm line-clamp-2 mb-4">{{ project.description || 'No description' }}</p>
-              <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-400">{{ project.createdAt | date:'MMM d, y' }}</span>
-                <span class="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">View Tasks →</span>
-              </div>
-            </a>
-          </div>
+            <h3 class="text-lg font-semibold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">{{ project.name }}</h3>
+            <p class="text-slate-500 text-sm line-clamp-2 mb-4">{{ project.description || 'No description' }}</p>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400">{{ project.createdAt | date:'MMM d, y' }}</span>
+              <span class="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">View Tasks →</span>
+            </div>
+          </a>
         </div>
 
         <!-- Pagination -->
@@ -296,7 +295,7 @@ export class DashboardComponent implements OnInit {
     return pages;
   }
 
-  constructor(private projectService: ProjectService, private fb: FormBuilder) {
+  constructor(private projectService: ProjectService, private fb: FormBuilder, private cdr: ChangeDetectorRef) {
     this.projectForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: ['', Validators.maxLength(500)]
@@ -329,10 +328,12 @@ export class DashboardComponent implements OnInit {
         }
         this.applyFilters();
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: err => {
         this.errorMessage = err.error?.error || 'Failed to load projects. Please try again.';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }

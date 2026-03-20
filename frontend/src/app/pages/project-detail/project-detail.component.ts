@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -108,7 +108,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
         </div>
 
         <!-- Kanban Board -->
-        <div *ngIf="!loading" class="grid gap-6" [class]="activeFilter === 'ALL' ? 'grid-cols-3' : 'grid-cols-1 max-w-lg'">
+        <div class="grid gap-6" [class]="activeFilter === 'ALL' ? 'grid-cols-3' : 'grid-cols-1 max-w-lg'">
           <div *ngFor="let col of visibleColumns" class="bg-gray-100 rounded-2xl p-4">
             <div class="flex items-center justify-between mb-4">
               <h3 class="font-semibold text-gray-700">{{ col.label }} ({{ getColumnTasks(col.status).length }})</h3>
@@ -120,16 +120,17 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
                 {{ searchTerm ? 'No matching tasks' : 'No tasks' }}
               </div>
               <div *ngFor="let task of getColumnTasks(col.status)"
-                class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                (click)="openEditModal(task)">
                 <div class="flex items-start justify-between gap-2 mb-2">
                   <h4 class="font-semibold text-gray-900 text-sm leading-tight">{{ task.title }}</h4>
                   <div class="flex gap-1 shrink-0">
-                    <button (click)="openEditModal(task)" class="p-1 text-gray-400 hover:text-teal-500 hover:bg-teal-50 rounded transition-colors" title="Edit task">
+                    <button (click)="openEditModal(task); $event.stopPropagation()" class="p-1 text-gray-400 hover:text-teal-500 hover:bg-teal-50 rounded transition-colors" title="Edit task">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </button>
-                    <button (click)="confirmDeleteTask(task)" class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete task">
+                    <button (click)="confirmDeleteTask(task); $event.stopPropagation()" class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete task">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                       </svg>
@@ -166,9 +167,6 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
           </div>
         </div>
 
-        <div *ngIf="loading" class="flex items-center justify-center h-64">
-          <div class="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
       </main>
     </div>
 
@@ -272,7 +270,6 @@ export class ProjectDetailComponent implements OnInit {
   project: Project | null = null;
   tasks: Task[] = [];
   filteredTasks: Task[] = [];
-  loading = true;
   showModal = false;
   showDeleteConfirm = false;
   saving = false;
@@ -317,7 +314,8 @@ export class ProjectDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private taskService: TaskService,
     private projectService: ProjectService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(200)]],
@@ -332,23 +330,22 @@ export class ProjectDetailComponent implements OnInit {
   ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('id') || '';
     this.projectService.getProject(this.projectId).subscribe({
-      next: p => this.project = p,
-      error: err => this.errorMessage = err.error?.error || 'Failed to load project.'
+      next: p => { this.project = p; this.cdr.markForCheck(); },
+      error: err => { this.errorMessage = err.error?.error || 'Failed to load project.'; this.cdr.markForCheck(); }
     });
     this.loadTasks();
   }
 
   loadTasks(): void {
-    this.loading = true;
     this.taskService.getTasks(this.projectId).subscribe({
       next: (response: any) => {
         this.tasks = Array.isArray(response) ? response : (response.content ?? []);
         this.applySearch();
-        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: err => {
         this.errorMessage = err.error?.error || 'Failed to load tasks.';
-        this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
