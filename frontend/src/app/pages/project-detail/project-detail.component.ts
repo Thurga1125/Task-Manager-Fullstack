@@ -40,23 +40,83 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-4 gap-4 mb-6 mt-6">
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <p class="text-sm text-gray-500 mb-1">Total Tasks</p>
-            <p class="text-3xl font-bold text-teal-600">{{ tasks.length }}</p>
+        <div class="flex gap-4 mb-6 mt-6 items-stretch">
+
+          <!-- Gauge Chart Card -->
+          <div class="bg-white rounded-2xl px-6 pt-5 pb-4 border border-gray-100 shadow-sm flex flex-col items-center">
+            <p class="text-sm font-semibold text-gray-500 mb-1 self-start">Overall Progress</p>
+            <svg viewBox="0 0 200 115" class="w-52">
+              <!-- Background track -->
+              <path d="M 20 100 A 80 80 0 0 1 180 100"
+                    fill="none" stroke="#f1f5f9" stroke-width="18" stroke-linecap="round"/>
+              <!-- To Do segment (gray) -->
+              <path *ngIf="todoCount > 0"
+                    [attr.d]="gaugeSegment(0, todoEndProp)"
+                    fill="none" stroke="#94a3b8" stroke-width="18" stroke-linecap="round"/>
+              <!-- In Progress segment (amber) -->
+              <path *ngIf="inProgressCount > 0"
+                    [attr.d]="gaugeSegment(todoEndProp, inProgressEndProp)"
+                    fill="none" stroke="#f59e0b" stroke-width="18" stroke-linecap="round"/>
+              <!-- Done segment (green) -->
+              <path *ngIf="doneCount > 0"
+                    [attr.d]="gaugeSegment(inProgressEndProp, 1)"
+                    fill="none" stroke="#10b981" stroke-width="18" stroke-linecap="round"/>
+              <!-- Center: percentage -->
+              <text x="100" y="88" text-anchor="middle"
+                    font-family="sans-serif" font-size="26" font-weight="700" fill="#0f172a">
+                {{ completionPct }}%
+              </text>
+              <text x="100" y="105" text-anchor="middle"
+                    font-family="sans-serif" font-size="11" fill="#94a3b8">
+                Completed
+              </text>
+            </svg>
+            <!-- Counts row -->
+            <div class="flex gap-6 mt-1">
+              <div class="text-center">
+                <p class="text-xl font-bold text-slate-600">{{ todoCount }}</p>
+                <p class="text-xs text-slate-400">To Do</p>
+              </div>
+              <div class="text-center">
+                <p class="text-xl font-bold text-amber-500">{{ inProgressCount }}</p>
+                <p class="text-xs text-slate-400">In Progress</p>
+              </div>
+              <div class="text-center">
+                <p class="text-xl font-bold text-emerald-500">{{ doneCount }}</p>
+                <p class="text-xs text-slate-400">Done</p>
+              </div>
+            </div>
           </div>
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <p class="text-sm text-gray-500 mb-1">To Do</p>
-            <p class="text-3xl font-bold text-gray-700">{{ countByStatus('TO_DO') }}</p>
+
+          <!-- Stat cards -->
+          <div class="flex flex-col gap-4 flex-1">
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex-1">
+              <p class="text-sm text-gray-500 mb-1">Total Tasks</p>
+              <p class="text-3xl font-bold text-teal-600">{{ tasks.length }}</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex-1 flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full bg-slate-400 flex-shrink-0"></span>
+              <div>
+                <p class="text-sm text-gray-500">To Do</p>
+                <p class="text-2xl font-bold text-slate-600">{{ todoCount }}</p>
+              </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex-1 flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full bg-amber-400 flex-shrink-0"></span>
+              <div>
+                <p class="text-sm text-gray-500">In Progress</p>
+                <p class="text-2xl font-bold text-amber-500">{{ inProgressCount }}</p>
+              </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex-1 flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"></span>
+              <div>
+                <p class="text-sm text-gray-500">Done</p>
+                <p class="text-2xl font-bold text-emerald-500">{{ doneCount }}</p>
+              </div>
+            </div>
           </div>
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <p class="text-sm text-gray-500 mb-1">In Progress</p>
-            <p class="text-3xl font-bold text-teal-500">{{ countByStatus('IN_PROGRESS') }}</p>
-          </div>
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <p class="text-sm text-gray-500 mb-1">Done</p>
-            <p class="text-3xl font-bold text-green-500">{{ countByStatus('DONE') }}</p>
-          </div>
+
         </div>
 
         <!-- Search + Filter + Sort Row -->
@@ -398,6 +458,40 @@ export class ProjectDetailComponent implements OnInit {
 
   countByStatus(status: string): number {
     return this.tasks.filter(t => t.status === status).length;
+  }
+
+  get todoCount(): number { return this.countByStatus('TO_DO'); }
+  get inProgressCount(): number { return this.countByStatus('IN_PROGRESS'); }
+  get doneCount(): number { return this.countByStatus('DONE'); }
+
+  get completionPct(): number {
+    return this.tasks.length === 0 ? 0 : Math.round((this.doneCount / this.tasks.length) * 100);
+  }
+
+  get todoEndProp(): number {
+    return this.tasks.length === 0 ? 0 : this.todoCount / this.tasks.length;
+  }
+
+  get inProgressEndProp(): number {
+    return this.tasks.length === 0 ? 0 : (this.todoCount + this.inProgressCount) / this.tasks.length;
+  }
+
+  private polarToCart(angleDeg: number): { x: number; y: number } {
+    const rad = angleDeg * Math.PI / 180;
+    return {
+      x: +(100 + 80 * Math.cos(rad)).toFixed(2),
+      y: +(100 - 80 * Math.sin(rad)).toFixed(2)
+    };
+  }
+
+  gaugeSegment(startProp: number, endProp: number): string {
+    if (Math.abs(endProp - startProp) < 0.001) return '';
+    const startAngle = 180 - startProp * 180;
+    const endAngle = 180 - endProp * 180;
+    const s = this.polarToCart(startAngle);
+    const e = this.polarToCart(endAngle);
+    const largeArc = Math.abs(startAngle - endAngle) > 180 ? 1 : 0;
+    return `M ${s.x} ${s.y} A 80 80 0 ${largeArc} 1 ${e.x} ${e.y}`;
   }
 
   get visibleColumns() {

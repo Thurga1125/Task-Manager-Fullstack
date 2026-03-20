@@ -27,7 +27,7 @@ import { RouterLink } from '@angular/router';
       <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <img src="logo.jpg" alt="TaskHub" class="w-9 h-9 rounded-xl">
+            <img src="logo.jpg" alt="TaskHub" class="w-9 h-9 rounded-xl object-contain">
             <span class="text-xl font-extrabold text-slate-800 tracking-tight">TaskHub</span>
           </div>
           <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
@@ -384,7 +384,7 @@ import { RouterLink } from '@angular/router';
       <footer class="border-t border-slate-100 py-8">
         <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-3">
-            <img src="logo.jpg" alt="TaskHub" class="w-7 h-7 rounded-lg">
+            <img src="logo.jpg" alt="TaskHub" class="w-7 h-7 rounded-lg object-contain">
             <span class="text-sm font-bold text-slate-700">TaskHub</span>
           </div>
           <p class="text-xs text-slate-400">Built with Angular, Node.js &amp; MongoDB</p>
